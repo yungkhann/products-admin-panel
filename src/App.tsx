@@ -1,43 +1,73 @@
-import { GitHubBanner, Refine, WelcomePage } from "@refinedev/core";
-import { RefineKbar, RefineKbarProvider } from "@refinedev/kbar";
-
-import { notificationProvider } from "@refinedev/antd";
-import "@refinedev/antd/dist/reset.css";
-
+import { Refine } from '@refinedev/core';
+import {
+  ThemedLayoutV2,
+  ErrorComponent,
+  RefineThemes,
+  RefineSnackbarProvider,
+  notificationProvider,
+} from '@refinedev/mui';
+import { CssBaseline, GlobalStyles, ThemeProvider } from '@mui/material';
 import routerBindings, {
-  DocumentTitleHandler,
+  NavigateToResource,
   UnsavedChangesNotifier,
-} from "@refinedev/react-router-v6";
-import dataProvider from "@refinedev/simple-rest";
-import { BrowserRouter, Route, Routes } from "react-router-dom";
-import { ColorModeContextProvider } from "./contexts/color-mode";
+} from '@refinedev/react-router-v6';
+import dataProvider from '@refinedev/simple-rest';
+import { BrowserRouter, Routes, Route, Outlet } from 'react-router-dom';
+import { MuiInferencer } from '@refinedev/inferencer/mui';
 
-function App() {
+const App: React.FC = () => {
   return (
-    <BrowserRouter>
-      <GitHubBanner />
-      <RefineKbarProvider>
-        <ColorModeContextProvider>
+    <ThemeProvider theme={RefineThemes.BlueDark}>
+      <CssBaseline />
+      <GlobalStyles styles={{ html: { WebkitFontSmoothing: 'auto' } }} />
+      <RefineSnackbarProvider>
+        <BrowserRouter>
           <Refine
-            notificationProvider={notificationProvider}
             routerProvider={routerBindings}
-            dataProvider={dataProvider("https://api.fake-rest.refine.dev")}
+            dataProvider={dataProvider('http://localhost:4000')}
+            notificationProvider={notificationProvider}
+            resources={[
+              {
+                name: 'products',
+                list: '/products',
+                show: '/products/show/:id',
+                create: '/products/create',
+                edit: '/products/edit/:id',
+                meta: {
+                  canDelete: true,
+                },
+              },
+            ]}
             options={{
               syncWithLocation: true,
               warnWhenUnsavedChanges: true,
-            }}
-          >
+            }}>
             <Routes>
-              <Route index element={<WelcomePage />} />
+              <Route
+                element={
+                  <ThemedLayoutV2>
+                    <Outlet />
+                  </ThemedLayoutV2>
+                }>
+                <Route
+                  index
+                  element={<NavigateToResource resource="products" />}
+                />
+                <Route path="products">
+                  <Route index element={<MuiInferencer />} />
+                  <Route path="show/:id" element={<MuiInferencer />} />
+                  <Route path="edit/:id" element={<MuiInferencer />} />
+                  <Route path="create" element={<MuiInferencer />} />
+                </Route>
+                <Route path="*" element={<ErrorComponent />} />
+              </Route>
             </Routes>
-            <RefineKbar />
             <UnsavedChangesNotifier />
-            <DocumentTitleHandler />
           </Refine>
-        </ColorModeContextProvider>
-      </RefineKbarProvider>
-    </BrowserRouter>
+        </BrowserRouter>
+      </RefineSnackbarProvider>
+    </ThemeProvider>
   );
-}
+};
 
 export default App;
